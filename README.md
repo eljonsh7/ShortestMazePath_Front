@@ -1,4 +1,4 @@
-# shortestmazepath_front
+# ShortestMazePath_Front
 
 ## Project setup
 ```
