@@ -310,7 +310,6 @@ export default {
           this.result = 'failure';
         }
       }
-      // this.running = false;  
     },
     returnToStart() {
       this.hasSucceded = false;
