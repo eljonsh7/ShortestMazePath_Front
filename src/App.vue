@@ -22,7 +22,7 @@
             :style="{ height: `${this.maze.length > 0 ? 100 / this.maze.length : 0}%` }">
             <div v-for="(cell, colIndex) in row" :key="`col${colIndex}`"
               :style="{ width: `${this.maze.length > 0 ? 100 / this.maze.length : 0}%` }"
-              class="hover:border-2 cursor-pointer border-lime-400" :disabled="this.running"
+              class="hover:border-2 hover:border-red-500 cursor-pointer border-lime-400" :disabled="this.running"
               @click="setMirror(rowIndex, colIndex)" :class="{
                 'bg-black': !cell.status,
                 'bg-white': cell.status,
