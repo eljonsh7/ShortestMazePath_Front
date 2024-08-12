@@ -17,7 +17,7 @@
             :class="{ 'bg-white': this.running || this.hasSucceded }"
             :style="{ height: `${this.maze.length > 0 ? 100 / this.maze.length : 0}%` }"  alt=""/>
         </div>
-        <div class="flex flex-wrap flex-col" style="height: 32.5rem; width: 32.5rem;">
+        <div class="flex flex-wrap flex-col" style="height: 30rem; width: 30rem;">
           <div v-for="(row, rowIndex) in maze" :key="`row${rowIndex}`" class="flex"
             :style="{ height: `${this.maze.length > 0 ? 100 / this.maze.length : 0}%` }">
             <div v-for="(cell, colIndex) in row" :key="`col${colIndex}`"
