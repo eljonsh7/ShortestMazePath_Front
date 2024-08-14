@@ -2,7 +2,7 @@ export default {
     startMazePath(maze) {
         let path = [];
         let rowIndex = maze.length - 1, colIndex = 0, dir = 'left';
-        while (colIndex != maze[0].length || rowIndex != 0) {
+        while (colIndex !== maze[0].length || rowIndex !== 0) {
             if (dir === 'left') {
                 if (maze[rowIndex][colIndex].mirror === 1) {
                     path.push({'x': rowIndex, 'y': colIndex, 'm': 1, 'rotate': false});

@@ -14,7 +14,7 @@
       <div class="flex h-auto justify-center" v-else>
         <div class="h-full md:flex flex-col justify-end hidden">
           <img id="light1" src="../assets/light.png" class="border-y-2 cursor-pointer border-lime-400"
-               :class="{ 'bg-white': this.running || this.hasSucceded }"
+               :class="{ 'bg-white': this.running }"
                :style="{ height: `${this.maze.length > 0 ? 100 / this.maze.length : 0}%` }" alt=""/>
         </div>
         <div class="flex flex-wrap flex-col" style="height: 30rem; width: 30rem;">
@@ -38,7 +38,7 @@
         </div>
         <div class="h-full md:flex flex-col justify-start hidden">
           <img id="light2" src="../assets/light.png" class="border-y-2 border-x-white cursor-pointer border-lime-400"
-               :class="{ 'bg-white': hasSucceded }"
+               :class="{ 'bg-white': this.result === 'success' }"
                :style="{ height: `${this.maze.length > 0 ? 100 / this.maze.length : 0}%` }" alt=""/>
         </div>
       </div>
@@ -121,7 +121,6 @@ export default {
       solutionBox: false,
       isLoading: false,
       chooseDifficulty: false,
-      hasSucceded: false,
       multiplayer: false,
     };
   },
@@ -129,7 +128,7 @@ export default {
     async getMaze(difficulty) {
       this.returnToStart();
       this.isLoading = true;
-      this.hasSucceded = false;
+      this.result = null;
       this.chooseDifficulty = false;
       try {
         if (this.multiplayer) {
@@ -212,41 +211,43 @@ export default {
           this.maze[i][j].status = false;
         }
       }
-      this.timer.pause();
 
       [this.maze, path, rowIndex, colIndex] = Maze.startMazePath(this.maze);
       await this.goThroughPath(path, rowIndex, colIndex);
     },
     async goThroughPath(array, rowIndex, colIndex, fromBack = false) {
       this.running = true;
+
+      const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
       if (fromBack) {
         for (let i = 0; i < array.length; i++) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await delay(200);
           this.maze[array[i]['y']][array[i]['x']].status = true;
-          if (array[i]['m']) this.maze[array[i]['y']][array[i]['x']].mirror = array[i]['m'];
-          if (array[i]['rotate']) this.maze[array[i]['y']][array[i]['x']].rotate = true;
+          this.maze[array[i]['y']][array[i]['x']].mirror = array[i]['m'] ?? null;
+          this.maze[array[i]['y']][array[i]['x']].rotate = array[i]['rotate'] ?? false;
         }
-        await new Promise(resolve => setTimeout(resolve, 200));
-        this.hasSucceded = true;
+        await delay(200);
         this.running = false;
       } else {
         for (let i = 0; i < array.length; i++) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await delay(200);
           this.maze[array[i]['x']][array[i]['y']].status = true;
         }
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await delay(200);
+
         if (colIndex === this.maze.length && rowIndex === 0) {
           this.result = 'success';
-          this.hasSucceded = true;
+          this.timer.stop();
         } else {
           this.result = 'failure';
+          this.timer.pause();
         }
       }
     },
     returnToStart() {
-      this.hasSucceded = false;
-      this.timer.reset();
-      this.timer.stop();
+      this.result = null;
+      this.timer = new Timer();
       this.time = '00:00:00';
       this.selectedMirror = 0;
       this.removeSelected = false;

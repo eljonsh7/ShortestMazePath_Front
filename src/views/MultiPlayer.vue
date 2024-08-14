@@ -4,9 +4,9 @@
     <div class="flex flex-col gap-1 w-2/3 justify-center items-center">
       <div class="flex gap-1 w-full justify-center">
         <CustomButton text="Single player" @click="this.$router.push('/')"
-                      :class="{ 'bg-lime-400 text-black': this.amReady }"/>
+                      :class="{ 'bg-lime-400 text-black/80': this.amReady }"/>
         <CustomButton text="Ready?" @click="getReady" :disabled="this.amReady"
-                      :class="{ 'bg-lime-400 text-black': this.amReady }"/>
+                      :class="{ 'bg-lime-400 text-black/80': this.amReady }"/>
       </div>
       <p class="text-xl font-bold text-lime-400" id="timer">{{ this.time }}</p>
       <div class="flex flex-wrap flex-col" style="height: 30rem; width: 30rem;">
@@ -93,6 +93,7 @@ import CountDown from "@/components/CountDown.vue";
 import Api from "@/services/api.js";
 import Time from "@/utils/time.js";
 import Maze from "@/utils/maze.js";
+import Toast from "@/utils/toast.js";
 
 import {Timer} from "easytimer.js";
 import Pusher from "pusher-js";
@@ -197,22 +198,29 @@ export default {
     async bindChannel() {
       await this.unbindChannels();
       this.channel.bind("UserFinished", async (e) => {
-        console.log(e);
         this.users.push({
           name: e.user,
           time: e.time
         });
+
+        if(e.user === this.fullName) {
+          Toast.showSuccess("Congrats. You finished!");
+        } else {
+          Toast.showWarning(e.user + " finished the game at " + this.formatTime(e.time) + ".");
+        }
       });
       this.channel.bind("AllUsersReady", async (e) => {
         this.onGameUsers = Object.values(e.users).length;
         this.readyUsers = Object.values(e.users).filter(value => value === true).length;
         if (this.readyUsers === this.onGameUsers) {
           this.showCountDown = true;
+          Toast.showSuccess("All players are ready. The game starts in 3 seconds.");
         }
       });
       this.channel.bind("UserAdded", async (e) => {
-        this.onGameUsers = Object.values(e).length;
-        this.readyUsers = Object.values(e).filter(value => value === true).length;
+        this.onGameUsers = Object.values(e.users).length;
+        this.readyUsers = Object.values(e.users).filter(value => value === true).length;
+        if(e.user !== this.fullName) Toast.showInfo(e.user + " just joined the game.")
       });
     },
     async unbindChannels() {
@@ -237,36 +245,29 @@ export default {
       [this.maze, path, rowIndex, colIndex] = Maze.startMazePath(this.maze);
       await this.goThroughPath(path, rowIndex, colIndex);
     },
-    async goThroughPath(array, rowIndex, colIndex, fromBack = false) {
+    async goThroughPath(array, rowIndex, colIndex) {
       this.running = true;
-      if (fromBack) {
-        for (let i = 0; i < array.length; i++) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-          this.maze[array[i]['y']][array[i]['x']].status = true;
-          this.maze[array[i]['y']][array[i]['x']].mirror = array[i]['m'] ?? null;
-          this.maze[array[i]['y']][array[i]['x']].rotate = array[i]['rotate'] ?? false;
-        }
-        await new Promise(resolve => setTimeout(resolve, 200));
-        this.hasSucceded = true;
-        this.running = false;
-      } else {
-        for (let i = 0; i < array.length; i++) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-          this.maze[array[i]['x']][array[i]['y']].status = true;
-        }
-        await new Promise(resolve => setTimeout(resolve, 200));
-        if (colIndex === this.maze.length && rowIndex === 0) {
-          this.result = 'success';
-          this.hasSucceded = true;
-          await Api.finishMaze(this.$route.params.mazeId, {
-            name: this.fullName,
-            time: this.time,
-          });
-          this.timer.stop();
-        } else {
-          this.result = 'failure';
-        }
+
+      const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+      for (let i = 0; i < array.length; i++) {
+        await delay(200);
+        this.maze[array[i]['x']][array[i]['y']].status = true;
       }
+      await delay(200);
+
+      if (colIndex === this.maze.length && rowIndex === 0) {
+        this.result = 'success';
+        this.hasSucceded = true;
+        await Api.finishMaze(this.$route.params.mazeId, {
+          name: this.fullName,
+          time: this.time,
+        });
+        this.timer.stop();
+      } else {
+        this.result = 'failure';
+      }
+      this.running = false;
     },
     reset(shouldRemoveMirrors = false) {
       if (!this.gameStarted) {
