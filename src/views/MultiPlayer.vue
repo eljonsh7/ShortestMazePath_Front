@@ -4,9 +4,9 @@
     <div class="flex flex-col gap-1 w-2/3 justify-center items-center">
       <div class="flex gap-1 w-full justify-center">
         <CustomButton text="Single player" @click="this.$router.push('/')"
-                      :class="{ 'bg-lime-400 text-black/80': this.amReady }"/>
+                      :class="{ 'bg-lime-400 text-black': this.amReady }"/>
         <CustomButton text="Ready?" @click="getReady" :disabled="this.amReady"
-                      :class="{ 'bg-lime-400 text-black/80': this.amReady }"/>
+                      :class="{ 'bg-lime-400 text-black': this.amReady }"/>
       </div>
       <p class="text-xl font-bold text-lime-400" id="timer">{{ this.time }}</p>
       <div class="flex flex-wrap flex-col" style="height: 30rem; width: 30rem;">
